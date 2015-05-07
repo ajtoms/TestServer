@@ -5,10 +5,20 @@ namespace backend\controllers;
 use Yii;
 use yii\rest\ActiveController;
 use common\models\Like;
+use yii\filters\auth\HttpBasicAuth;
 
 class PostController extends ActiveController
 {
 	public $modelClass = 'common\models\Post';
+    
+    public function behaviors()
+	{
+	    $behaviors = parent::behaviors();
+	    $behaviors['authenticator'] = [
+	        'class' => HttpBasicAuth::className(),
+	    ];
+	    return $behaviors;
+	}
 
 	public function actionGetLikes()
 	{
