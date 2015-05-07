@@ -43,6 +43,12 @@ return [
                     ],
                     'except' => ['delete'],
                 ],
+                ['class' => 'yii\rest\UrlRule', 'controller' => 'post', 
+                    'extraPatterns' => [
+                        "GET {id}/likes" => "get-likes",
+                        "POST {id}/likes" => "create-like",
+                        "DELETE {id}/likes" => "delete-like",
+                    ]],
             ],
         ],
         'request' => [
