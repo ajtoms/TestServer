@@ -68,6 +68,9 @@ class User extends ActiveRecord implements IdentityInterface
             ['username', 'required'],
             ['username', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This username has already been taken.'],
             ['username', 'string', 'min' => 2, 'max' => 255],
+            
+            //call auth_key safe so that it can be 'mass assigned' (assigned from a POST, PUT etc request)
+            ['auth_key', 'safe'],
 
             ['email', 'filter', 'filter' => 'trim'],
             ['email', 'required'],
@@ -215,5 +218,19 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;
+    }
+    
+    /**
+    * Called before inserting anything into the database.
+    */
+    public function beforeSave($insert)
+    {
+        if(parent::beforeSave($insert))
+        {
+            $this->generateAuthKey();
+            return true;
+        }
+        
+        return false;
     }
 }
