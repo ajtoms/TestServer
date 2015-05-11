@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use Intervention\Image\ImageManagerStatic as Image;
 use Yii;
 use yii\web\Link;
 use yii\web\Linkable;
@@ -20,8 +21,11 @@ use \yii\db\ActiveRecord;
  *
  * @property User $author0
  */
-class Post extends ActiveRecord implements Linkable
+class Post extends ActiveRecord
 {
+
+    public $photo;
+
     /**
      * @inheritdoc
      */
@@ -39,7 +43,9 @@ class Post extends ActiveRecord implements Linkable
             [['title', 'body', 'author'], 'required'],
             [['author'], 'integer'],
             [['time_created'], 'safe'],
-            [['title', 'body', 'photo'], 'string', 'max' => 255]
+            [['title', 'body'], 'string', 'max' => 255],
+            [['photo'], 'file', 'extensions'=>'jpeg, jpg, png, gif', 
+                'mimeTypes' => 'image/jpeg, image/png, image/gif']
         ];
     }
 
@@ -52,7 +58,7 @@ class Post extends ActiveRecord implements Linkable
             'id' => 'ID',
             'title' => 'Title',
             'body' => 'Body',
-            'photo' => 'Photo',
+            'photo_orig_path' => 'Original Photo Filepath',
             'author' => 'Author',
             'time_created' => 'Time Created',
         ];
@@ -66,7 +72,16 @@ class Post extends ActiveRecord implements Linkable
         return $this->hasOne(User::className(), ['id' => 'author']);
     }
 
-    public function getLastThreeLikes(){
+    public function getLikeCount()
+    {
+        $count = Like::find()
+            ->where(['post_id' => $this->id])
+            ->count();
+        return intval($count);
+    }
+
+    public function getLastThreeLikes()
+    {
         $likes = Like::find()
             ->where(['post_id' => $this->id])
             ->orderBy('time_liked DESC')
@@ -75,26 +90,24 @@ class Post extends ActiveRecord implements Linkable
         return $likes;
     }
 
-    public function getLikeCount(){
-        $count = Like::find()
+    public function userHasLiked(){
+        $liked = Like::find()
             ->where(['post_id' => $this->id])
             ->count();
-        return intval($count);
-    }
-
-    public function getLinks()
-    {
-        return [
-            Link::REL_SELF => Url::to(['post/view', 'id' => $this->id], true),
-        ];
+        return  intval($liked);
     }
 
     public function fields()
     {
         return [
+            'id',
             'title',
             'body',
-            'photo',
+            'photo_orig_path',
+            'photo_160_path',
+            'photo_320_path',
+            'photo_640_path',
+            'photo_1280_path',
             'author',
             'like_count' => function($model) {
                 return $model->getLikeCount();
@@ -102,8 +115,57 @@ class Post extends ActiveRecord implements Linkable
             'last_three_likes' => function($model){
                 return $model->getLastThreeLikes();
             },
+            'user_has_liked' => function($model){
+                return $model->userHasLiked();
+            },
             'time_created',
         ];
+    }
+
+    //////////////////////////////////////////////////////////////////
+    //  Photo Logic; Uses library called Intervention or something  //
+    //////////////////////////////////////////////////////////////////
+
+    public function beforeSave($insert)
+    {
+        if(parent::beforeSave($insert))
+        {
+            $this->savePhoto();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function savePhoto()
+    {
+        if($this->photo)
+        {
+            $filename = uniqid();
+            $basePath = '/photos/';
+            $relPath =  $basePath . "original/" . $filename . '.' . $this->photo->extension;
+
+            $absPath = Yii::$app->basePath.'/web'.$relPath;
+
+            $this->photo->saveAs($absPath);
+            $this->photo_orig_path = $relPath;
+
+            $img = Image::make($absPath);
+            for($i = 160; $i <= 1280; $i=$i*2){
+                $attr = "photo_".$i."_path";
+                if($img->width() > $i){
+                    $img->backup();
+                    $relPath = $basePath.$i.'/'.$filename.'.jpg';
+                    $absPath = Yii::$app->basePath.'/web'.$relPath;
+                    $img->widen($i)
+                        ->save($absPath);
+                    $this->$attr = $relPath;
+                    $img->reset();
+                } else {
+                    $this->$attr = $relPath;
+                }
+            }
+        }
     }
 
 }
