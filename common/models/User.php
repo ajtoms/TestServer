@@ -193,7 +193,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * Generates password hash from password and sets it to the model
-     *
+     * 
      * @param string $password
      */
     public function setPassword($password)
@@ -242,7 +242,8 @@ class User extends ActiveRecord implements IdentityInterface
     {
         if(parent::beforeSave($insert))
         {
-            $this->generateAuthKey();
+            if($insert)
+                $this->generateAuthKey();
             return true;
         }
         
