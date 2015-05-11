@@ -27,6 +27,10 @@ class UserController extends ActiveController
 			'class' => "backend\actions\LoginAction",
 			'modelClass' => 'common\models\User'];
 		
+		$action['update'] = [
+			'class' => 'backend\actions\UpdateUserAction',
+			'modelClass' => 'common\models\User'];
+		
 		return $actions;
 	}
 }
