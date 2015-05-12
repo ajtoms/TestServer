@@ -1,0 +1,23 @@
+Interactions between client and server:
+
+-create a user with name, email, and password
+	POST /users
+-update email and password
+	PUT /users/###
+-login as a user
+	PUT /users/login
+
+-make post with title, body, and possibly a photo
+	POST /posts
+-like a post
+	POST /posts/###/likes
+-unlike a post
+	DELETE /posts/###/like
+-delete a post
+	DELETE /posts/###
+-update a post's body or title
+	PUT /posts/###
+-view all users that have liked a post
+	GET /posts/###/likes
+-view all posts
+	GET /posts
