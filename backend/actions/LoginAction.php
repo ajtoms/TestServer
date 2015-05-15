@@ -36,6 +36,7 @@ class LoginAction extends \yii\rest\Action
             $response->setStatusCode(200);
             
 			return 	[
+						'id' => $user->id,
 						'username' => $user->getUsername(),
 						'access_token' => $user->getAuthKey()
 					];
