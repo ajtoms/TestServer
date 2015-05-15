@@ -108,7 +108,9 @@ class Post extends ActiveRecord
             'photo_320_path',
             'photo_640_path',
             'photo_1280_path',
-            'author',
+            'author' => function($model) {
+                return User::findIdentity($model->author)["username"];
+            },
             'like_count' => function($model) {
                 return $model->getLikeCount();
             },
